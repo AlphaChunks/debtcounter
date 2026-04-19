@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Callum's Debt Calculator</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin: 0;
+      padding: 230px 20px;
+
+      background:
+        radial-gradient(circle at center, rgba(0,0,0,0) 40%, rgba(0,0,0,0.75) 100%),
+        linear-gradient(rgba(0,0,0,0.55), rgba(0,0,0,0.55)),
+        url('https://cdn.wallpapersafari.com/70/31/lJxbCe.jpg') no-repeat center center fixed;
+      background-size: cover;
+
+      color: white;
+      opacity: 0;
+      animation: fadeIn 1.5s ease forwards;
+      perspective: 1000px;
+      overflow-x: hidden;
+    }
+
+    body::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background: repeating-linear-gradient(
+        to bottom,
+        rgba(0,0,0,0.5) 0px,
+        rgba(0,0,0,0.5) 1px,
+        transparent 2px,
+        transparent 4px
+      );
+      mix-blend-mode: overlay;
+      animation: scanMove 6s linear infinite, scanFlicker 0.12s infinite;
+      z-index: 2;
+    }
+
+    @keyframes scanMove {
+      from { background-position: 0 0; }
+      to { background-position: 0 100px; }
+    }
+
+    @keyframes scanFlicker {
+      0%,100% { opacity: 0.25; }
+      50% { opacity: 0.35; }
+    }
+
+    @keyframes fadeIn {
+      to { opacity: 1; }
+    }
+
+    .container {
+      transform-style: preserve-3d;
+      position: relative;
+      z-index: 3;
+    }
+
+    h1, #desc, #name, #sci, #power {
+      text-shadow:
+        -2px -2px 0 #000,
+         2px -2px 0 #000,
+        -2px  2px 0 #000,
+         2px  2px 0 #000,
+         0 0 6px rgba(0,0,0,0.8);
+    }
+
+    h1 {
+      font-size: clamp(32px, 5vw, 60px);
+      margin-bottom: 10px;
+    }
+
+    .live {
+      color: #ff2b2b;
+      text-shadow:
+        0 0 6px rgba(255,255,255,0.6),
+        0 0 12px rgba(255,255,255,0.4),
+        0 0 20px rgba(255,255,255,0.25);
+      animation: livePulse 2s infinite, glitch 3s infinite;
+      display: inline-block;
+    }
+
+    @keyframes livePulse {
+      0%,100% {
+        text-shadow:
+          0 0 6px rgba(255,255,255,0.5),
+          0 0 12px rgba(255,255,255,0.3),
+          0 0 20px rgba(255,255,255,0.2);
+      }
+      50% {
+        text-shadow:
+          0 0 10px rgba(255,255,255,0.8),
+          0 0 18px rgba(255,255,255,0.5),
+          0 0 28px rgba(255,255,255,0.3);
+      }
+    }
+
+    @keyframes glitch {
+      0%,95%,100% { transform: translate(0,0); opacity:1; }
+      96% { transform: translate(-2px,1px); opacity:0.85; }
+      97% { transform: translate(2px,-1px); }
+      98% { transform: translate(-1px,0); }
+      99% { transform: translate(1px,1px); }
+    }
+
+    #desc {
+      font-size: clamp(16px, 2.5vw, 24px);
+      color: #ddd;
+      max-width: 800px;
+      margin: 0 auto 30px auto;
+    }
+
+    @keyframes glowPulse {
+      0%,100% {
+        text-shadow:
+          0 0 4px rgba(255,255,255,0.4),
+          0 0 8px rgba(255,255,255,0.25);
+      }
+      50% {
+        text-shadow:
+          0 0 7px rgba(255,255,255,0.6),
+          0 0 12px rgba(255,255,255,0.3);
+      }
+    }
+
+    @keyframes glowPulseRed {
+      0%,100% {
+        text-shadow:
+          0 0 4px rgba(255,0,0,0.4),
+          0 0 8px rgba(255,0,0,0.25);
+      }
+      50% {
+        text-shadow:
+          0 0 7px rgba(255,0,0,0.6),
+          0 0 12px rgba(255,0,0,0.3);
+      }
+    }
+
+    #days {
+      font-size: clamp(28px, 5vw, 50px);
+      font-weight: bold;
+      animation: glowPulse 2s infinite;
+    }
+
+    #amount {
+      color: #ff4d4d;
+      font-size: clamp(50px, 10vw, 120px);
+      font-weight: bold;
+      margin-top: 20px;
+      animation: glowPulseRed 2s infinite, glitch 4s infinite;
+    }
+
+    #name {
+      font-size: clamp(22px, 4vw, 40px);
+      margin-top: 10px;
+    }
+
+    #sci, #power {
+      font-size: clamp(16px, 3vw, 26px);
+      margin-top: 8px;
+      color: #ccc;
+      word-break: break-word;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container" id="container">
+    <h1>Callum's <span class="live">LIVE</span> Debt Calculator</h1>
+
+    <p id="desc">
+      This is Callum's debt to Adrian and it started at £3 with 10% interest every day due to Callum spilling Adrian's snus all over.
+    </p>
+
+    <p id="days"></p>
+    <p id="amount"></p>
+    <p id="name"></p>
+    <p id="sci"></p>
+    <p id="power"></p>
+  </div>
+
+  <script>
+    const startDate = new Date("2025-02-15");
+    const today = new Date();
+    const daysPassed = Math.floor((today - startDate) / (1000 * 60 * 60 * 24));
+
+    let amount = 3;
+    for (let i = 0; i < daysPassed; i++) amount *= 1.1;
+
+    const format = n => n.toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const names = ["","Thousand","Million","Billion","Trillion","Quadrillion","Quintillion","Sextillion","Septillion","Octillion","Nonillion","Decillion","Undecillion","Duodecillion","Tredecillion","Quattuordecillion","Quindecillion","Sexdecillion","Septendecillion","Octodecillion","Novemdecillion","Vigintillion"];
+
+    const tier = Math.floor(Math.log10(amount) / 3);
+
+    document.getElementById("days").innerText = daysPassed + " DAYS";
+    document.getElementById("amount").innerText = "£" + format(amount);
+    document.getElementById("name").innerText = names[tier] || "Beyond Vigintillion";
+    document.getElementById("sci").innerText = amount.toExponential(2).replace("e+", " × 10^");
+    document.getElementById("power").innerText = "3 × 1.1^" + daysPassed;
+
+    const container = document.getElementById("container");
+
+    let mx=0,my=0,cx=0,cy=0;
+
+    document.addEventListener("mousemove", e=>{
+      mx=(innerWidth/2-e.clientX)/80;
+      my=(innerHeight/2-e.clientY)/80;
+    });
+
+    function animate(){
+      const t=Date.now()*0.001;
+      const sx=Math.sin(t)*1.25;
+      const sy=Math.cos(t)*1.25;
+
+      cx+=((mx+sx)-cx)*0.03;
+      cy+=((my+sy)-cy)*0.03;
+
+      container.style.transform=`rotateY(${cx}deg) rotateX(${cy}deg)`;
+      requestAnimationFrame(animate);
+    }
+
+    animate();
+  </script>
+
+</body>
+</html>
